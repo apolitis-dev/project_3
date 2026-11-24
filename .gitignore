@@ -28,3 +28,6 @@ __pycache__/
 # Presentation source files (keep the PDF in the submission)
 Project 3 presentation.mp4
 Sliding-Window Attention Tradeoffs.key
+
+# Local experiment notes
+/EXPERIMENT_NOTES.md
