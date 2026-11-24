@@ -1,0 +1,1142 @@
+{
+  "memory": [
+    {
+      "run_id": "mistral_7b_v01__a100_sxm/p32512_d256_b1_full_s32",
+      "run_dir": "runs/rapid/mistral_7b_v01__a100_sxm/p32512_d256_b1_full_s32",
+      "commit": "339ef6ab9fe9b38df3e1d1674ef55121792aa421",
+      "model": {
+        "model_param": {
+          "mode": "LLM",
+          "run_type": "inference",
+          "tied_embeddings": false,
+          "model_type": "llama",
+          "global_batch_size": 1,
+          "gradient_accumulation_steps": 1,
+          "seq_len": 32768,
+          "decode_len": 256,
+          "hidden_dim": 4096,
+          "attention": {
+            "attention_type": "gqa",
+            "num_heads": 32,
+            "kv_heads": 8,
+            "use_flashattention": true,
+            "attention_tile_size": 128
+          },
+          "moe": {
+            "num_experts": 1,
+            "top_k": 1,
+            "moe_intermediate_size": 14336,
+            "n_shared_experts": 0,
+            "moe_layer_freq": 1,
+            "first_k_dense_replace": 32
+          },
+          "intermediate_size": 14336,
+          "vocab_size": 32000,
+          "num_layers": 32
+        },
+        "inference_param": {
+          "sample_every": 32
+        }
+      },
+      "hardware": {
+        "sw_param": {
+          "full_recomputation": false,
+          "kernel_launch_overhead": "9e-6",
+          "dp_zero_stage": 2,
+          "precision": {
+            "tensor_format": "bf16",
+            "kv_cache": "as_tensor_format",
+            "parameters": "as_tensor_format",
+            "gradients": "as_tensor_format",
+            "grad_microbatch": "as_tensor_format",
+            "grad_communication": "as_tensor_format",
+            "optimizer_states": "as_tensor_format",
+            "stats": "as_tensor_format",
+            "master_parameters": 0.0
+          },
+          "h2d_bandwidth": -1,
+          "const_mem_offset": "0 GB",
+          "dp_microbatch": "last_mb"
+        },
+        "tech_param": {
+          "core": {
+            "operating_frequency": "1.41e9",
+            "num_bundles": 108,
+            "nominal_flop_rate_per_mcu": 512,
+            "nominal_energy_per_flop": 1.8e-13,
+            "num_mcu_per_bundle": 4,
+            "FMA_d1": 8,
+            "FMA_d2": 4,
+            "dataflow": "best",
+            "util": 1.0
+          },
+          "DRAM": {
+            "size": 80000000000,
+            "bandwidth": 2039000000000,
+            "dynamic_energy_per_bit": 4.5e-12,
+            "latency": "100e-9",
+            "util": 1
+          },
+          "SRAM-L2": {
+            "size": "40 MB",
+            "bandwidth": "7050 GB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-L1": {
+            "size": "20736 KB",
+            "bandwidth": "18 TB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-R": {
+            "size": "27 MB",
+            "bandwidth": "122 TB",
+            "dynamic_energy_per_bit": "110e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "network": {
+            "intra_node": {
+              "latency": "5e-6",
+              "util": 1,
+              "bandwidth": "400 Gb"
+            },
+            "inter_node": {
+              "latency": "5e-6",
+              "util": 0.96,
+              "bandwidth": "400 Gb"
+            }
+          }
+        },
+        "memory_hierarchy": {
+          "l0": {
+            "type": "SRAM-R",
+            "scope": "mcu"
+          },
+          "l1": {
+            "type": "SRAM-L1",
+            "scope": "mcu-bundle"
+          },
+          "l2": {
+            "type": "SRAM-L2",
+            "scope": "global"
+          },
+          "l3": {
+            "type": "DRAM",
+            "scope": "global"
+          }
+        },
+        "parallelism": {
+          "pp": 1,
+          "mb": 1,
+          "tp": 1,
+          "tp_sp": false,
+          "cp": 1,
+          "train": {
+            "dp": 1,
+            "ep": 1,
+            "tp_ep": true
+          },
+          "inference": {
+            "replica_count": 1,
+            "moe_dp": 1
+          }
+        },
+        "network": {
+          "dimensions": [
+            {
+              "id": "dim0",
+              "label": "device_fabric",
+              "size": 1,
+              "topology": {
+                "type": "Ring",
+                "bandwidth": "400 Gb",
+                "latency": "5e-6",
+                "energy_per_bit": "8e-12",
+                "util": 1.0
+              },
+              "collective_override": {},
+              "parallelisms": [
+                "tp",
+                "cp",
+                "ep",
+                "pp",
+                "dp"
+              ]
+            }
+          ],
+          "overlap": {
+            "tp_sp_overlap": 0.63,
+            "tp_overlap": 0.6,
+            "cp_overlap": 0.0
+          }
+        },
+        "execution_backend": {
+          "model": "analytical",
+          "astra": {
+            "backend": "astra",
+            "mode": "full_astrasim_flattened",
+            "collectives": {
+              "all_gather": "auto",
+              "all_reduce": "auto",
+              "reduce_scatter": "auto",
+              "all_to_all": "auto"
+            },
+            "sys_options": {
+              "endpoint_delay": 10,
+              "active_chunks_per_dimension": 32,
+              "preferred_dataset_splits": 32
+            }
+          }
+        },
+        "inference": {
+          "kvcache_type": "hbm_only"
+        }
+      },
+      "prompt_tokens": 32512,
+      "decode_tokens": 256,
+      "total_tokens": 32768,
+      "batch_size": 1,
+      "prefill_s": 8.68108111632311,
+      "decode_s": 3.652023810762139,
+      "ttft_s": 8.695337998002366,
+      "peak_gib": 20.94140625,
+      "capacity_gib": 74.50580596923828,
+      "per_user_tok_s": 70.09811908826944,
+      "aggregate_tok_s": 70.09811908826944,
+      "kv_resident_gib": 4.0,
+      "kv_resident_bytes": 4294967296.0,
+      "kv_fetch_bytes": 1095233437696.0,
+      "local_layers": 0,
+      "global_layers": 32,
+      "window": null,
+      "prefill_policy": "unchanged dense FlashAttention cost; local mask and cache eviction assumed",
+      "fits": true,
+      "cached": true
+    },
+    {
+      "run_id": "mistral_7b_v01__a100_sxm/p32512_d256_b1_w4096_g0_s32",
+      "run_dir": "runs/rapid/mistral_7b_v01__a100_sxm/p32512_d256_b1_w4096_g0_s32",
+      "commit": "339ef6ab9fe9b38df3e1d1674ef55121792aa421",
+      "model": {
+        "model_param": {
+          "mode": "LLM",
+          "run_type": "inference",
+          "tied_embeddings": false,
+          "model_type": "llama",
+          "global_batch_size": 1,
+          "gradient_accumulation_steps": 1,
+          "seq_len": 32768,
+          "decode_len": 256,
+          "hidden_dim": 4096,
+          "attention": {
+            "attention_type": "gqa",
+            "num_heads": 32,
+            "kv_heads": 8,
+            "use_flashattention": true,
+            "attention_tile_size": 128,
+            "sliding_window": 4096,
+            "local_global_interval": 0
+          },
+          "moe": {
+            "num_experts": 1,
+            "top_k": 1,
+            "moe_intermediate_size": 14336,
+            "n_shared_experts": 0,
+            "moe_layer_freq": 1,
+            "first_k_dense_replace": 32
+          },
+          "intermediate_size": 14336,
+          "vocab_size": 32000,
+          "num_layers": 32
+        },
+        "inference_param": {
+          "sample_every": 32
+        }
+      },
+      "hardware": {
+        "sw_param": {
+          "full_recomputation": false,
+          "kernel_launch_overhead": "9e-6",
+          "dp_zero_stage": 2,
+          "precision": {
+            "tensor_format": "bf16",
+            "kv_cache": "as_tensor_format",
+            "parameters": "as_tensor_format",
+            "gradients": "as_tensor_format",
+            "grad_microbatch": "as_tensor_format",
+            "grad_communication": "as_tensor_format",
+            "optimizer_states": "as_tensor_format",
+            "stats": "as_tensor_format",
+            "master_parameters": 0.0
+          },
+          "h2d_bandwidth": -1,
+          "const_mem_offset": "0 GB",
+          "dp_microbatch": "last_mb"
+        },
+        "tech_param": {
+          "core": {
+            "operating_frequency": "1.41e9",
+            "num_bundles": 108,
+            "nominal_flop_rate_per_mcu": 512,
+            "nominal_energy_per_flop": 1.8e-13,
+            "num_mcu_per_bundle": 4,
+            "FMA_d1": 8,
+            "FMA_d2": 4,
+            "dataflow": "best",
+            "util": 1.0
+          },
+          "DRAM": {
+            "size": 80000000000,
+            "bandwidth": 2039000000000,
+            "dynamic_energy_per_bit": 4.5e-12,
+            "latency": "100e-9",
+            "util": 1
+          },
+          "SRAM-L2": {
+            "size": "40 MB",
+            "bandwidth": "7050 GB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-L1": {
+            "size": "20736 KB",
+            "bandwidth": "18 TB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-R": {
+            "size": "27 MB",
+            "bandwidth": "122 TB",
+            "dynamic_energy_per_bit": "110e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "network": {
+            "intra_node": {
+              "latency": "5e-6",
+              "util": 1,
+              "bandwidth": "400 Gb"
+            },
+            "inter_node": {
+              "latency": "5e-6",
+              "util": 0.96,
+              "bandwidth": "400 Gb"
+            }
+          }
+        },
+        "memory_hierarchy": {
+          "l0": {
+            "type": "SRAM-R",
+            "scope": "mcu"
+          },
+          "l1": {
+            "type": "SRAM-L1",
+            "scope": "mcu-bundle"
+          },
+          "l2": {
+            "type": "SRAM-L2",
+            "scope": "global"
+          },
+          "l3": {
+            "type": "DRAM",
+            "scope": "global"
+          }
+        },
+        "parallelism": {
+          "pp": 1,
+          "mb": 1,
+          "tp": 1,
+          "tp_sp": false,
+          "cp": 1,
+          "train": {
+            "dp": 1,
+            "ep": 1,
+            "tp_ep": true
+          },
+          "inference": {
+            "replica_count": 1,
+            "moe_dp": 1
+          }
+        },
+        "network": {
+          "dimensions": [
+            {
+              "id": "dim0",
+              "label": "device_fabric",
+              "size": 1,
+              "topology": {
+                "type": "Ring",
+                "bandwidth": "400 Gb",
+                "latency": "5e-6",
+                "energy_per_bit": "8e-12",
+                "util": 1.0
+              },
+              "collective_override": {},
+              "parallelisms": [
+                "tp",
+                "cp",
+                "ep",
+                "pp",
+                "dp"
+              ]
+            }
+          ],
+          "overlap": {
+            "tp_sp_overlap": 0.63,
+            "tp_overlap": 0.6,
+            "cp_overlap": 0.0
+          }
+        },
+        "execution_backend": {
+          "model": "analytical",
+          "astra": {
+            "backend": "astra",
+            "mode": "full_astrasim_flattened",
+            "collectives": {
+              "all_gather": "auto",
+              "all_reduce": "auto",
+              "reduce_scatter": "auto",
+              "all_to_all": "auto"
+            },
+            "sys_options": {
+              "endpoint_delay": 10,
+              "active_chunks_per_dimension": 32,
+              "preferred_dataset_splits": 32
+            }
+          }
+        },
+        "inference": {
+          "kvcache_type": "hbm_only"
+        }
+      },
+      "prompt_tokens": 32512,
+      "decode_tokens": 256,
+      "total_tokens": 32768,
+      "batch_size": 1,
+      "prefill_s": 8.68108111632311,
+      "decode_s": 3.1455882157135866,
+      "ttft_s": 8.69336857029074,
+      "peak_gib": 17.47265625,
+      "capacity_gib": 74.50580596923828,
+      "per_user_tok_s": 81.38382472351856,
+      "aggregate_tok_s": 81.38382472351856,
+      "kv_resident_gib": 0.5,
+      "kv_resident_bytes": 536870912.0,
+      "kv_fetch_bytes": 137438953472.0,
+      "local_layers": 32,
+      "global_layers": 0,
+      "window": 4096,
+      "prefill_policy": "unchanged dense FlashAttention cost; local mask and cache eviction assumed",
+      "fits": true,
+      "cached": true
+    }
+  ],
+  "timing": [
+    {
+      "run_id": "Llama3.1-8B_inf__a100_sxm/p1484_d512_b1_full_s32",
+      "run_dir": "runs/rapid/Llama3.1-8B_inf__a100_sxm/p1484_d512_b1_full_s32",
+      "commit": "339ef6ab9fe9b38df3e1d1674ef55121792aa421",
+      "model": {
+        "model_param": {
+          "mode": "LLM",
+          "run_type": "inference",
+          "tied_embeddings": true,
+          "model_type": "llama",
+          "global_batch_size": 1,
+          "gradient_accumulation_steps": 1,
+          "seq_len": 1996,
+          "decode_len": 512,
+          "hidden_dim": 4096,
+          "attention": {
+            "attention_type": "gqa",
+            "num_heads": 32,
+            "kv_heads": 8,
+            "use_flashattention": true,
+            "attention_tile_size": 128
+          },
+          "moe": {
+            "num_experts": 1,
+            "top_k": 1,
+            "moe_intermediate_size": 14336,
+            "n_shared_experts": 0,
+            "moe_layer_freq": 1,
+            "first_k_dense_replace": 32
+          },
+          "intermediate_size": 14336,
+          "vocab_size": 128256,
+          "num_layers": 32
+        },
+        "inference_param": {
+          "sample_every": 32
+        }
+      },
+      "hardware": {
+        "sw_param": {
+          "full_recomputation": false,
+          "kernel_launch_overhead": "9e-6",
+          "dp_zero_stage": 2,
+          "precision": {
+            "tensor_format": "bf16",
+            "kv_cache": "as_tensor_format",
+            "parameters": "as_tensor_format",
+            "gradients": "as_tensor_format",
+            "grad_microbatch": "as_tensor_format",
+            "grad_communication": "as_tensor_format",
+            "optimizer_states": "as_tensor_format",
+            "stats": "as_tensor_format",
+            "master_parameters": 0.0
+          },
+          "h2d_bandwidth": -1,
+          "const_mem_offset": "0 GB",
+          "dp_microbatch": "last_mb"
+        },
+        "tech_param": {
+          "core": {
+            "operating_frequency": "1.41e9",
+            "num_bundles": 108,
+            "nominal_flop_rate_per_mcu": 512,
+            "nominal_energy_per_flop": 1.8e-13,
+            "num_mcu_per_bundle": 4,
+            "FMA_d1": 8,
+            "FMA_d2": 4,
+            "dataflow": "best",
+            "util": 1.0
+          },
+          "DRAM": {
+            "size": 80000000000,
+            "bandwidth": 2039000000000,
+            "dynamic_energy_per_bit": 4.5e-12,
+            "latency": "100e-9",
+            "util": 1
+          },
+          "SRAM-L2": {
+            "size": "40 MB",
+            "bandwidth": "7050 GB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-L1": {
+            "size": "20736 KB",
+            "bandwidth": "18 TB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-R": {
+            "size": "27 MB",
+            "bandwidth": "122 TB",
+            "dynamic_energy_per_bit": "110e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "network": {
+            "intra_node": {
+              "latency": "5e-6",
+              "util": 1,
+              "bandwidth": "400 Gb"
+            },
+            "inter_node": {
+              "latency": "5e-6",
+              "util": 0.96,
+              "bandwidth": "400 Gb"
+            }
+          }
+        },
+        "memory_hierarchy": {
+          "l0": {
+            "type": "SRAM-R",
+            "scope": "mcu"
+          },
+          "l1": {
+            "type": "SRAM-L1",
+            "scope": "mcu-bundle"
+          },
+          "l2": {
+            "type": "SRAM-L2",
+            "scope": "global"
+          },
+          "l3": {
+            "type": "DRAM",
+            "scope": "global"
+          }
+        },
+        "parallelism": {
+          "pp": 1,
+          "mb": 1,
+          "tp": 1,
+          "tp_sp": false,
+          "cp": 1,
+          "train": {
+            "dp": 1,
+            "ep": 1,
+            "tp_ep": true
+          },
+          "inference": {
+            "replica_count": 1,
+            "moe_dp": 1
+          }
+        },
+        "network": {
+          "dimensions": [
+            {
+              "id": "dim0",
+              "label": "device_fabric",
+              "size": 1,
+              "topology": {
+                "type": "Ring",
+                "bandwidth": "400 Gb",
+                "latency": "5e-6",
+                "energy_per_bit": "8e-12",
+                "util": 1.0
+              },
+              "collective_override": {},
+              "parallelisms": [
+                "tp",
+                "cp",
+                "ep",
+                "pp",
+                "dp"
+              ]
+            }
+          ],
+          "overlap": {
+            "tp_sp_overlap": 0.63,
+            "tp_overlap": 0.6,
+            "cp_overlap": 0.0
+          }
+        },
+        "execution_backend": {
+          "model": "analytical",
+          "astra": {
+            "backend": "astra",
+            "mode": "full_astrasim_flattened",
+            "collectives": {
+              "all_gather": "auto",
+              "all_reduce": "auto",
+              "reduce_scatter": "auto",
+              "all_to_all": "auto"
+            },
+            "sys_options": {
+              "endpoint_delay": 10,
+              "active_chunks_per_dimension": 32,
+              "preferred_dataset_splits": 32
+            }
+          }
+        },
+        "inference": {
+          "kvcache_type": "hbm_only"
+        }
+      },
+      "prompt_tokens": 1484,
+      "decode_tokens": 512,
+      "total_tokens": 1996,
+      "batch_size": 1,
+      "prefill_s": 0.09666613420522222,
+      "decode_s": 6.405838139888182,
+      "ttft_s": 0.10915982950684067,
+      "peak_gib": 16.014188766479492,
+      "capacity_gib": 74.50580596923828,
+      "per_user_tok_s": 79.92708976080019,
+      "aggregate_tok_s": 79.92708976080019,
+      "kv_resident_gib": 0.24365234375,
+      "kv_resident_bytes": 261619712.0,
+      "kv_fetch_bytes": 116802977792.0,
+      "local_layers": 0,
+      "global_layers": 32,
+      "window": null,
+      "prefill_policy": "unchanged dense FlashAttention cost; local mask and cache eviction assumed",
+      "fits": true,
+      "cached": true
+    },
+    {
+      "run_id": "Llama3.1-8B_inf__a100_sxm/p2948_d467_b1_full_s32",
+      "run_dir": "runs/rapid/Llama3.1-8B_inf__a100_sxm/p2948_d467_b1_full_s32",
+      "commit": "339ef6ab9fe9b38df3e1d1674ef55121792aa421",
+      "model": {
+        "model_param": {
+          "mode": "LLM",
+          "run_type": "inference",
+          "tied_embeddings": true,
+          "model_type": "llama",
+          "global_batch_size": 1,
+          "gradient_accumulation_steps": 1,
+          "seq_len": 3415,
+          "decode_len": 467,
+          "hidden_dim": 4096,
+          "attention": {
+            "attention_type": "gqa",
+            "num_heads": 32,
+            "kv_heads": 8,
+            "use_flashattention": true,
+            "attention_tile_size": 128
+          },
+          "moe": {
+            "num_experts": 1,
+            "top_k": 1,
+            "moe_intermediate_size": 14336,
+            "n_shared_experts": 0,
+            "moe_layer_freq": 1,
+            "first_k_dense_replace": 32
+          },
+          "intermediate_size": 14336,
+          "vocab_size": 128256,
+          "num_layers": 32
+        },
+        "inference_param": {
+          "sample_every": 32
+        }
+      },
+      "hardware": {
+        "sw_param": {
+          "full_recomputation": false,
+          "kernel_launch_overhead": "9e-6",
+          "dp_zero_stage": 2,
+          "precision": {
+            "tensor_format": "bf16",
+            "kv_cache": "as_tensor_format",
+            "parameters": "as_tensor_format",
+            "gradients": "as_tensor_format",
+            "grad_microbatch": "as_tensor_format",
+            "grad_communication": "as_tensor_format",
+            "optimizer_states": "as_tensor_format",
+            "stats": "as_tensor_format",
+            "master_parameters": 0.0
+          },
+          "h2d_bandwidth": -1,
+          "const_mem_offset": "0 GB",
+          "dp_microbatch": "last_mb"
+        },
+        "tech_param": {
+          "core": {
+            "operating_frequency": "1.41e9",
+            "num_bundles": 108,
+            "nominal_flop_rate_per_mcu": 512,
+            "nominal_energy_per_flop": 1.8e-13,
+            "num_mcu_per_bundle": 4,
+            "FMA_d1": 8,
+            "FMA_d2": 4,
+            "dataflow": "best",
+            "util": 1.0
+          },
+          "DRAM": {
+            "size": 80000000000,
+            "bandwidth": 2039000000000,
+            "dynamic_energy_per_bit": 4.5e-12,
+            "latency": "100e-9",
+            "util": 1
+          },
+          "SRAM-L2": {
+            "size": "40 MB",
+            "bandwidth": "7050 GB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-L1": {
+            "size": "20736 KB",
+            "bandwidth": "18 TB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-R": {
+            "size": "27 MB",
+            "bandwidth": "122 TB",
+            "dynamic_energy_per_bit": "110e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "network": {
+            "intra_node": {
+              "latency": "5e-6",
+              "util": 1,
+              "bandwidth": "400 Gb"
+            },
+            "inter_node": {
+              "latency": "5e-6",
+              "util": 0.96,
+              "bandwidth": "400 Gb"
+            }
+          }
+        },
+        "memory_hierarchy": {
+          "l0": {
+            "type": "SRAM-R",
+            "scope": "mcu"
+          },
+          "l1": {
+            "type": "SRAM-L1",
+            "scope": "mcu-bundle"
+          },
+          "l2": {
+            "type": "SRAM-L2",
+            "scope": "global"
+          },
+          "l3": {
+            "type": "DRAM",
+            "scope": "global"
+          }
+        },
+        "parallelism": {
+          "pp": 1,
+          "mb": 1,
+          "tp": 1,
+          "tp_sp": false,
+          "cp": 1,
+          "train": {
+            "dp": 1,
+            "ep": 1,
+            "tp_ep": true
+          },
+          "inference": {
+            "replica_count": 1,
+            "moe_dp": 1
+          }
+        },
+        "network": {
+          "dimensions": [
+            {
+              "id": "dim0",
+              "label": "device_fabric",
+              "size": 1,
+              "topology": {
+                "type": "Ring",
+                "bandwidth": "400 Gb",
+                "latency": "5e-6",
+                "energy_per_bit": "8e-12",
+                "util": 1.0
+              },
+              "collective_override": {},
+              "parallelisms": [
+                "tp",
+                "cp",
+                "ep",
+                "pp",
+                "dp"
+              ]
+            }
+          ],
+          "overlap": {
+            "tp_sp_overlap": 0.63,
+            "tp_overlap": 0.6,
+            "cp_overlap": 0.0
+          }
+        },
+        "execution_backend": {
+          "model": "analytical",
+          "astra": {
+            "backend": "astra",
+            "mode": "full_astrasim_flattened",
+            "collectives": {
+              "all_gather": "auto",
+              "all_reduce": "auto",
+              "reduce_scatter": "auto",
+              "all_to_all": "auto"
+            },
+            "sys_options": {
+              "endpoint_delay": 10,
+              "active_chunks_per_dimension": 32,
+              "preferred_dataset_splits": 32
+            }
+          }
+        },
+        "inference": {
+          "kvcache_type": "hbm_only"
+        }
+      },
+      "prompt_tokens": 2948,
+      "decode_tokens": 467,
+      "total_tokens": 3415,
+      "batch_size": 1,
+      "prefill_s": 0.21928967667518687,
+      "decode_s": 5.889479501190779,
+      "ttft_s": 0.23188483385419617,
+      "peak_gib": 16.54264259338379,
+      "capacity_gib": 74.50580596923828,
+      "per_user_tok_s": 79.29393419326418,
+      "aggregate_tok_s": 79.29393419326418,
+      "kv_resident_gib": 0.4168701171875,
+      "kv_resident_bytes": 447610880.0,
+      "kv_fetch_bytes": 194772205568.0,
+      "local_layers": 0,
+      "global_layers": 32,
+      "window": null,
+      "prefill_policy": "unchanged dense FlashAttention cost; local mask and cache eviction assumed",
+      "fits": true,
+      "cached": true
+    },
+    {
+      "run_id": "Llama3.1-8B_inf__a100_sxm/p11525_d449_b1_full_s32",
+      "run_dir": "runs/rapid/Llama3.1-8B_inf__a100_sxm/p11525_d449_b1_full_s32",
+      "commit": "339ef6ab9fe9b38df3e1d1674ef55121792aa421",
+      "model": {
+        "model_param": {
+          "mode": "LLM",
+          "run_type": "inference",
+          "tied_embeddings": true,
+          "model_type": "llama",
+          "global_batch_size": 1,
+          "gradient_accumulation_steps": 1,
+          "seq_len": 11974,
+          "decode_len": 449,
+          "hidden_dim": 4096,
+          "attention": {
+            "attention_type": "gqa",
+            "num_heads": 32,
+            "kv_heads": 8,
+            "use_flashattention": true,
+            "attention_tile_size": 128
+          },
+          "moe": {
+            "num_experts": 1,
+            "top_k": 1,
+            "moe_intermediate_size": 14336,
+            "n_shared_experts": 0,
+            "moe_layer_freq": 1,
+            "first_k_dense_replace": 32
+          },
+          "intermediate_size": 14336,
+          "vocab_size": 128256,
+          "num_layers": 32
+        },
+        "inference_param": {
+          "sample_every": 32
+        }
+      },
+      "hardware": {
+        "sw_param": {
+          "full_recomputation": false,
+          "kernel_launch_overhead": "9e-6",
+          "dp_zero_stage": 2,
+          "precision": {
+            "tensor_format": "bf16",
+            "kv_cache": "as_tensor_format",
+            "parameters": "as_tensor_format",
+            "gradients": "as_tensor_format",
+            "grad_microbatch": "as_tensor_format",
+            "grad_communication": "as_tensor_format",
+            "optimizer_states": "as_tensor_format",
+            "stats": "as_tensor_format",
+            "master_parameters": 0.0
+          },
+          "h2d_bandwidth": -1,
+          "const_mem_offset": "0 GB",
+          "dp_microbatch": "last_mb"
+        },
+        "tech_param": {
+          "core": {
+            "operating_frequency": "1.41e9",
+            "num_bundles": 108,
+            "nominal_flop_rate_per_mcu": 512,
+            "nominal_energy_per_flop": 1.8e-13,
+            "num_mcu_per_bundle": 4,
+            "FMA_d1": 8,
+            "FMA_d2": 4,
+            "dataflow": "best",
+            "util": 1.0
+          },
+          "DRAM": {
+            "size": 80000000000,
+            "bandwidth": 2039000000000,
+            "dynamic_energy_per_bit": 4.5e-12,
+            "latency": "100e-9",
+            "util": 1
+          },
+          "SRAM-L2": {
+            "size": "40 MB",
+            "bandwidth": "7050 GB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-L1": {
+            "size": "20736 KB",
+            "bandwidth": "18 TB",
+            "dynamic_energy_per_bit": "130e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "SRAM-R": {
+            "size": "27 MB",
+            "bandwidth": "122 TB",
+            "dynamic_energy_per_bit": "110e-15",
+            "latency": 0,
+            "util": 1
+          },
+          "network": {
+            "intra_node": {
+              "latency": "5e-6",
+              "util": 1,
+              "bandwidth": "400 Gb"
+            },
+            "inter_node": {
+              "latency": "5e-6",
+              "util": 0.96,
+              "bandwidth": "400 Gb"
+            }
+          }
+        },
+        "memory_hierarchy": {
+          "l0": {
+            "type": "SRAM-R",
+            "scope": "mcu"
+          },
+          "l1": {
+            "type": "SRAM-L1",
+            "scope": "mcu-bundle"
+          },
+          "l2": {
+            "type": "SRAM-L2",
+            "scope": "global"
+          },
+          "l3": {
+            "type": "DRAM",
+            "scope": "global"
+          }
+        },
+        "parallelism": {
+          "pp": 1,
+          "mb": 1,
+          "tp": 1,
+          "tp_sp": false,
+          "cp": 1,
+          "train": {
+            "dp": 1,
+            "ep": 1,
+            "tp_ep": true
+          },
+          "inference": {
+            "replica_count": 1,
+            "moe_dp": 1
+          }
+        },
+        "network": {
+          "dimensions": [
+            {
+              "id": "dim0",
+              "label": "device_fabric",
+              "size": 1,
+              "topology": {
+                "type": "Ring",
+                "bandwidth": "400 Gb",
+                "latency": "5e-6",
+                "energy_per_bit": "8e-12",
+                "util": 1.0
+              },
+              "collective_override": {},
+              "parallelisms": [
+                "tp",
+                "cp",
+                "ep",
+                "pp",
+                "dp"
+              ]
+            }
+          ],
+          "overlap": {
+            "tp_sp_overlap": 0.63,
+            "tp_overlap": 0.6,
+            "cp_overlap": 0.0
+          }
+        },
+        "execution_backend": {
+          "model": "analytical",
+          "astra": {
+            "backend": "astra",
+            "mode": "full_astrasim_flattened",
+            "collectives": {
+              "all_gather": "auto",
+              "all_reduce": "auto",
+              "reduce_scatter": "auto",
+              "all_to_all": "auto"
+            },
+            "sys_options": {
+              "endpoint_delay": 10,
+              "active_chunks_per_dimension": 32,
+              "preferred_dataset_splits": 32
+            }
+          }
+        },
+        "inference": {
+          "kvcache_type": "hbm_only"
+        }
+      },
+      "prompt_tokens": 11525,
+      "decode_tokens": 449,
+      "total_tokens": 11974,
+      "batch_size": 1,
+      "prefill_s": 1.5074611473271795,
+      "decode_s": 5.929092872780776,
+      "ttft_s": 1.5206507297263947,
+      "peak_gib": 19.6386456489563,
+      "capacity_gib": 74.50580596923828,
+      "per_user_tok_s": 75.72827912027908,
+      "aggregate_tok_s": 75.72827912027908,
+      "kv_resident_gib": 1.461669921875,
+      "kv_resident_bytes": 1569456128.0,
+      "kv_fetch_bytes": 691503104000.0,
+      "local_layers": 0,
+      "global_layers": 32,
+      "window": null,
+      "prefill_policy": "unchanged dense FlashAttention cost; local mask and cache eviction assumed",
+      "fits": true,
+      "cached": true
+    }
+  ],
+  "published": {
+    "accessed": "2026-11-13",
+    "memory": {
+      "paper": "https://arxiv.org/html/2310.06825v1",
+      "model_config": "https://huggingface.co/mistralai/Mistral-7B-v0.1/raw/main/config.json",
+      "section": "2 Architectural details: Rolling Buffer Cache",
+      "context_tokens": 32768,
+      "window_tokens": 4096,
+      "reported_cache_reduction": 8,
+      "scope": "Published architectural cache-memory result; not a measured decode-speed benchmark."
+    },
+    "timing": {
+      "source": "https://www.koyeb.com/deploy/llama-3-1-8b-instruct",
+      "methodology": "https://www.koyeb.com/docs/hardware/gpu-benchmarks",
+      "model": "Llama 3.1 8B Instruct",
+      "gpu": "A100SXM",
+      "batch_size": 1,
+      "metric": "Published end-to-end wall-clock time, compared to simulated prefill + decode time.",
+      "precision_note": "BF16 assumed in simulator. Exact serving dtype, kernel version, clocks, and network overhead are not fully specified by this table.",
+      "rows": [
+        {
+          "input_tokens": 1484,
+          "output_tokens": 512,
+          "wall_s": 6.5
+        },
+        {
+          "input_tokens": 2948,
+          "output_tokens": 467,
+          "wall_s": 5.84
+        },
+        {
+          "input_tokens": 11525,
+          "output_tokens": 449,
+          "wall_s": 5.97
+        }
+      ]
+    },
+    "hardware_sources": {
+      "A100": "https://developer.nvidia.com/blog/supercharging-worlds-fastest-ai-supercomputing-platform-on-hgx-a100-80gb-gpus/",
+      "H100_H200": "https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html"
+    },
+    "hardware_model_note": "Capacity and HBM bandwidth use numeric SI bytes. H100/H200 use Hopper compute/cache parameters from the repository, with H200 sharing the H100 compute model. These are GPU-like estimates, not full device calibrations."
+  },
+  "timing_errors_percent": [
+    0.03852729374467234,
+    4.602211949759694,
+    24.565393971657556
+  ],
+  "mean_absolute_timing_error_percent": 9.735377738387308
+}

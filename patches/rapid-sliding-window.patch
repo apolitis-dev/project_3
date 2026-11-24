@@ -1,0 +1,285 @@
+diff --git a/base_timing.py b/base_timing.py
+index 0e8878e..679fbb4 100644
+--- a/base_timing.py
++++ b/base_timing.py
+@@ -135,6 +135,8 @@ class model_LLM:
+         )
+         self.use_flashattention = getattr(exp_config.model_config.attention, "use_flashattention", False)
+         self.attention_tile_size = getattr(exp_config.model_config.attention, "attention_tile_size", None)
++        self.sliding_window = exp_config.model_config.attention.sliding_window
++        self.local_global_interval = exp_config.model_config.attention.local_global_interval
+ 
+         self.moe_num_experts = int(getattr(exp_config.model_config, "num_experts", 1))
+         self.moe_top_k = int(getattr(exp_config.model_config, "top_k", 1))
+diff --git a/config.py b/config.py
+index 3e68c42..b4c926d 100644
+--- a/config.py
++++ b/config.py
+@@ -1179,6 +1179,8 @@ class LLMAttentionConfig:
+     head_dim: Optional[int] = None
+     use_flashattention: bool = False
+     attention_tile_size: Optional[int] = None
++    sliding_window: Optional[int] = None
++    local_global_interval: int = 4
+ 
+     @classmethod
+     def from_dict(cls, attention_dict: Dict[str, object]) -> "LLMAttentionConfig":
+@@ -1256,6 +1258,13 @@ class LLMAttentionConfig:
+         else:
+             attention_tile_size = None
+ 
++        window = attention_dict.get("sliding_window")
++        interval = attention_dict.get("local_global_interval", 4)
++        if window is not None and (type(window) is not int or window <= 0):
++            raise ValueError("attention.sliding_window must be a positive integer")
++        if type(interval) is not int or interval < 0:
++            raise ValueError("attention.local_global_interval must be a nonnegative integer")
++
+         return cls(
+             attention_type=attn_type,
+             num_heads=num_heads,
+@@ -1263,6 +1272,8 @@ class LLMAttentionConfig:
+             head_dim=head_dim,
+             use_flashattention=use_flashattention,
+             attention_tile_size=attention_tile_size,
++            sliding_window=window,
++            local_global_interval=interval,
+         )
+ 
+ 
+@@ -1459,6 +1470,8 @@ class LLMConfig:
+             )
+ 
+         attention = LLMAttentionConfig.from_dict(_require_field("model_param", model_dict, "attention"))
++        if attention.sliding_window is not None and run_type != "inference":
++            raise NotImplementedError("Sliding-window modeling currently supports inference only.")
+ 
+         num_layers = _parse_int_field("model_param", model_dict, "num_layers")
+         hidden_dim = _parse_int_field("model_param", model_dict, "hidden_dim")
+@@ -1584,6 +1597,8 @@ class LLMInferenceConfig:
+             return cls(sample_every=-1)
+         inference_dict = _require_mapping("inference_param", inference_dict)
+         raw = inference_dict.get("sample_every", -1)
++        if type(raw) is not int or (raw != -1 and raw <= 0):
++            raise ValueError("inference_param.sample_every must be -1 or a positive integer")
+         try:
+             sample_every = int(raw)
+         except (TypeError, ValueError) as exc:
+diff --git a/inference_timing.py b/inference_timing.py
+index 993fa0d..e7fc766 100644
+--- a/inference_timing.py
++++ b/inference_timing.py
+@@ -31,6 +31,7 @@ from simulate_inference_graph import DecodeSample, InferenceConfig, InferenceEng
+ import llm_util
+ import json
+ from timing_model import CollectiveType, CommSpec, DirectionTiming, OperationTiming, OperationGroup
++from window_attention import layer_mask, retained_by_layer, sum_capped_positions
+ 
+ def convert_prefix(value: float) -> float:
+     """Assign SI unit prefixes to numerical values."""
+@@ -51,6 +52,13 @@ class TimeCalculationLLMInference(TimeCalculationLLM):
+     def __init__(self, hw_config, model_config, mode, output_dir: Optional[str] = None):
+         super().__init__(hw_config, model_config, mode, output_dir)
+         self._raw_model_config = model_config
++        if self.model.sliding_window is not None:
++            if (self.tp != 1 or self.cp != 1 or self.pp != 1 or self.mb != 1
++                    or self.use_moe or self.execution_mode.value != "analytical"
++                    or self.replica_count != 1):
++                raise NotImplementedError("Sliding-window experiments require one analytical GPU, mb=1, no MoE or replicas.")
++            if not self.flash_attention:
++                raise NotImplementedError("Window experiments require FlashAttention prefill workspace modeling.")
+ 
+     def _build_decode_transformer_results(
+         self,
+@@ -59,6 +67,7 @@ class TimeCalculationLLMInference(TimeCalculationLLM):
+         total_seq_len: int,
+         use_moe_layer: bool,
+         gemm_shapes: Optional[Dict[str, Tuple[int, ...]]] = None,
++        _local_only: bool = False,
+     ) -> Tuple[Dict[str, OperationTiming], Dict[str, float]]:
+         """Construct transformer timings + node breakdown for a single decode step."""
+ 
+@@ -471,6 +480,34 @@ class TimeCalculationLLMInference(TimeCalculationLLM):
+             "embedding_b": 0.0,
+         }
+ 
++        window = self.model.sliding_window
++        local_layers = sum(layer_mask(self.num_layers, window, self.model.local_global_interval))
++        if not _local_only and local_layers and total_seq_len > window:
++            local_timings, _ = self._build_decode_transformer_results(
++                batch_size=batch_size, total_seq_len=window,
++                use_moe_layer=use_moe_layer, gemm_shapes=None, _local_only=True,
++            )
++            # One GPU executes layers serially. A weighted per-layer attention
++            # time repeated L times equals the exact sum of both layer types.
++            # Keep every projection, FFN, normalization and launch cost intact.
++            fraction = local_layers / self.num_layers
++            old_attention = transformer_timings["attention"].total_forward_time()
++            for name in ("attention", "attention_scale_softmax"):
++                full = transformer_timings[name].forward
++                local = local_timings[name].forward
++                mix = lambda a, b: (1 - fraction) * a + fraction * b
++                levels = set(full.memory_accesses) | set(local.memory_accesses)
++                transformer_timings[name] = OperationTiming(name, DirectionTiming(
++                    compute_time=mix(full.compute_time, local.compute_time),
++                    comm_time=0.0, comm_bytes=0,
++                    flops=mix(full.flops, local.flops),
++                    memory_accesses={key: mix(full.memory_accesses.get(key, 0), local.memory_accesses.get(key, 0)) for key in levels},
++                    notes={"local_layers": local_layers, "global_layers": self.num_layers - local_layers,
++                           "local_positions": window, "global_positions": total_seq_len},
++                ))
++            node_breakdown["transformer_time_f"] += (
++                transformer_timings["attention"].total_forward_time() - old_attention
++            )
+         return transformer_timings, node_breakdown
+ 
+ 
+@@ -957,9 +994,14 @@ class TimeCalculationLLMInference(TimeCalculationLLM):
+ 
+         prefill_store_bytes = token_bytes * prefill_len * num_layers
+         decode_store_bytes = token_bytes * decode_len * num_layers
+-        decode_fetch_bytes = token_bytes * num_layers * (
+-            decode_len * (prefill_len + self.seq_len) // 2
+-        )
++        window = self.model.sliding_window
++        interval = self.model.local_global_interval
++        local_count = sum(layer_mask(num_layers, window, interval))
++        global_count = num_layers - local_count
++        full_positions = decode_len * (2 * (prefill_len + 1) + decode_len - 1) // 2
++        local_positions = sum_capped_positions(prefill_len + 1, decode_len, window) if local_count else 0
++        decode_fetch_bytes = token_bytes * (global_count * full_positions + local_count * local_positions)
++        resident_bytes = token_bytes * sum(retained_by_layer(self.seq_len, num_layers, window, interval))
+ 
+         def _to_gib(byte_val: int) -> str:
+             gib_val = byte_val / (1024 ** 3)
+@@ -1002,6 +1044,11 @@ class TimeCalculationLLMInference(TimeCalculationLLM):
+             "kv_cache_decode_store_bytes": decode_store_bytes,
+             "kv_cache_decode_fetch_bytes": decode_fetch_bytes,
+             "decode_tokens_per_s": decode_rates,
++            "kv_cache_final_resident_bytes": resident_bytes,
++            "local_layers": local_count,
++            "global_layers": global_count,
++            "sliding_window": window,
++            "prefill_compute_policy": "unchanged dense FlashAttention cost; local mask and cache eviction assumed",
+         }
+ 
+     @staticmethod
+diff --git a/memory_estimation.py b/memory_estimation.py
+index f1c5e46..641a552 100644
+--- a/memory_estimation.py
++++ b/memory_estimation.py
+@@ -18,6 +18,7 @@ from enum import Enum
+ from typing import Any, Dict, FrozenSet, Optional, Tuple
+ 
+ import llm_util
++from window_attention import retained_by_layer
+ 
+ 
+ class MemKind(Enum):
+@@ -562,6 +563,17 @@ class MemoryEstimator:
+                 head_dim = tc.hidden_dim // tc.num_heads
+             kv_heads_per_tp = math.ceil(kv_heads / tp)
+             kv_tokens = int(kv_cache_tokens)
++            window = getattr(tc.model, "sliding_window", None)
++            if window is not None:
++                # All layers reside on one GPU in this guarded experiment.
++                # The existing graph multiplies this mean by the layer count,
++                # giving the exact sum of local and global resident caches.
++                if tp != 1 or pp != 1 or cp != 1 or use_moe:
++                    raise NotImplementedError("Window-cache memory currently requires one dense GPU.")
++                per_layer_tokens = retained_by_layer(
++                    kv_tokens, tc.num_layers, window, tc.model.local_global_interval
++                )
++                kv_tokens = sum(per_layer_tokens) / tc.num_layers
+             kv_cache_bytes_per_layer = (
+                 float(batch_size)
+                 * float(kv_heads_per_tp)
+diff --git a/run_perf.py b/run_perf.py
+index 98aee20..4714d83 100755
+--- a/run_perf.py
++++ b/run_perf.py
+@@ -15,6 +15,7 @@
+ # limitations under the License.
+ 
+ import argparse
++import json
+ import math
+ import os
+ import sys
+@@ -253,6 +254,11 @@ def _run_llm_inference(exp_hw_config, exp_model_config, exp_dir, mode):
+     # Get total inference time (prefill + decode)
+     inference_timing = tc_inf.calc_total_inference_time()
+     total_time = inference_timing["total_inference_time"]
++    with open(os.path.join(exp_dir, "inference_metrics.json"), "w") as handle:
++        json.dump({**inference_timing,
++                   "peak_gib": tc_inf.memory_peak_gb,
++                   "capacity_gib": tc_inf.memory_capacity_per_device_gb,
++                   "fits": not tc_inf.memory_capacity_exceeded}, handle, indent=2)
+     decode_rates = inference_timing.get("decode_tokens_per_s") or {}
+ 
+     log_message(
+diff --git a/simulate_inference_graph.py b/simulate_inference_graph.py
+index 2bdd70e..ae478fb 100644
+--- a/simulate_inference_graph.py
++++ b/simulate_inference_graph.py
+@@ -173,7 +173,16 @@ class DecodeGraph(Graph):
+         if last_step not in sample_points:
+             sample_points.append(last_step)
+ 
+-        return sorted(sample_points)
++        attention = self.model_config.model_config.attention
++        window = getattr(attention, "sliding_window", None)
++        if window is not None:
++            # Include either side of window saturation; endpoint interpolation
++            # alone would smooth over the change from growing to fixed work.
++            crossing = window - self.config.seq_len - 1
++            for step in (crossing - 1, crossing, crossing + 1):
++                if 0 <= step < self.config.decode_len:
++                    sample_points.append(step)
++        return sorted(set(sample_points))
+ 
+     def _execute_decode_step(
+         self,
+@@ -289,11 +298,12 @@ class DecodeGraph(Graph):
+                 raise ValueError("Sample points must be strictly increasing")
+ 
+             midpoint = 0.5 * (prev_sample.execution_time + sample.execution_time)
+-            segment_time = midpoint * step_gap
++            # Sum the discrete steps prev+1 ... current under linear
++            # interpolation. At sample_every=1 this is the exact step sum.
++            segment_time = step_gap * prev_sample.execution_time + (sample.execution_time - prev_sample.execution_time) * (step_gap + 1) / 2
+             total_time += segment_time
+ 
+-            midpoint_energy = 0.5 * (prev_sample.execution_energy + sample.execution_energy)
+-            segment_energy = midpoint_energy * step_gap
++            segment_energy = step_gap * prev_sample.execution_energy + (sample.execution_energy - prev_sample.execution_energy) * (step_gap + 1) / 2
+             total_energy += segment_energy
+ 
+             print(
+diff --git a/window_attention.py b/window_attention.py
+new file mode 100644
+--- /dev/null
++++ b/window_attention.py
+@@ -0,0 +1,22 @@
++"""Sliding-window bookkeeping for the single-GPU inference experiment.
++
++Windows count visible positions INCLUDING the current token. Interval 4 means
++local, local, local, global; 0 means all local and 1 means all global.
++"""
++
++
++def layer_mask(num_layers, window, interval):
++    if window is None:
++        return [False] * num_layers
++    return [interval == 0 or (index + 1) % interval != 0 for index in range(num_layers)]
++
++
++def retained_by_layer(tokens, num_layers, window, interval):
++    return [min(tokens, window) if local else tokens
++            for local in layer_mask(num_layers, window, interval)]
++
++
++def sum_capped_positions(first, count, cap):
++    """Sum min(first + step, cap) over count consecutive decode steps."""
++    growing = max(0, min(count, cap - first + 1))
++    return growing * (2 * first + growing - 1) // 2 + (count - growing) * cap

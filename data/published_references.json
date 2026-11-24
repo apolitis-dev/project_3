@@ -1,0 +1,43 @@
+{
+  "accessed": "2026-11-13",
+  "memory": {
+    "paper": "https://arxiv.org/html/2310.06825v1",
+    "model_config": "https://huggingface.co/mistralai/Mistral-7B-v0.1/raw/main/config.json",
+    "section": "2 Architectural details: Rolling Buffer Cache",
+    "context_tokens": 32768,
+    "window_tokens": 4096,
+    "reported_cache_reduction": 8,
+    "scope": "Published architectural cache-memory result; not a measured decode-speed benchmark."
+  },
+  "timing": {
+    "source": "https://www.koyeb.com/deploy/llama-3-1-8b-instruct",
+    "methodology": "https://www.koyeb.com/docs/hardware/gpu-benchmarks",
+    "model": "Llama 3.1 8B Instruct",
+    "gpu": "A100SXM",
+    "batch_size": 1,
+    "metric": "Published end-to-end wall-clock time, compared to simulated prefill + decode time.",
+    "precision_note": "BF16 assumed in simulator. Exact serving dtype, kernel version, clocks, and network overhead are not fully specified by this table.",
+    "rows": [
+      {
+        "input_tokens": 1484,
+        "output_tokens": 512,
+        "wall_s": 6.5
+      },
+      {
+        "input_tokens": 2948,
+        "output_tokens": 467,
+        "wall_s": 5.84
+      },
+      {
+        "input_tokens": 11525,
+        "output_tokens": 449,
+        "wall_s": 5.97
+      }
+    ]
+  },
+  "hardware_sources": {
+    "A100": "https://developer.nvidia.com/blog/supercharging-worlds-fastest-ai-supercomputing-platform-on-hgx-a100-80gb-gpus/",
+    "H100_H200": "https://docs.nvidia.com/enterprise-reference-architectures/hgx-ai-factory-h100-h200-b200/latest/components.html"
+  },
+  "hardware_model_note": "Capacity and HBM bandwidth use numeric SI bytes. H100/H200 use Hopper compute/cache parameters from the repository, with H200 sharing the H100 compute model. These are GPU-like estimates, not full device calibrations."
+}

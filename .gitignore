@@ -1,0 +1,30 @@
+# Local Python environments and caches
+/.venv/
+/.rapid-venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# Clone separately, then apply patches/rapid-sliding-window.patch
+/Rapid-LLM/
+
+# Recreated simulator output and figure exports
+/runs/rapid/
+/output/
+/figures/
+*.log
+
+# Machine-specific files and local credentials
+/.vscode/
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Recordings
+*.mp4
+*.mov
+
+# Presentation source files (keep the PDF in the submission)
+Project 3 presentation.mp4
+Sliding-Window Attention Tradeoffs.key
