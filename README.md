@@ -35,8 +35,8 @@ Results are saved to:
 - runs/hardware_study/results.json
 
 Reruns overwrite the corresponding results. Detailed per-case output lives in
-the ignored runs/rapid/ directory. See [EXPERIMENT_NOTES.md](EXPERIMENT_NOTES.md)
-for assumptions and limitations.
+the ignored runs/rapid/ directory. Modeling assumptions and limitations are
+described in the [notebook](sliding_window_start.ipynb).
 
 Built on [RAPID-LLM](https://github.com/nanocad-lab/Rapid-LLM), licensed under
 Apache 2.0. Its license is included in patches/LICENSE-RAPID-LLM.
